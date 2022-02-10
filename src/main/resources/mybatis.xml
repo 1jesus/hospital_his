@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!--设置mybatis输出日志-->
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+        <!--数据库字段下划线转驼峰-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--需要引入log4j依赖-->
+        <!--<setting name="logImpl" value="LOG4J"/>-->
+    </settings>
+
+    <!--设置别名-->
+    <typeAliases>
+        <!--name: 实体类所在的包名-->
+        <package name="com.zhiyou.model"/>
+    </typeAliases>
+
+
+    <!--============================== 配置分页拦截器插件 ==============================-->
+    <plugins>
+        <!--        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+                    <property name="helperDialect" value="mysql"/>
+                    <property name="reasonable" value="true"/>&lt;!&ndash;分页合理化(上一页和下一页)&ndash;&gt;
+                </plugin>-->
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- 设置数据库类型 Oracle,Mysql,MariaDB,SQLite,Hsqldb,PostgreSQL六种数据库-->
+            <property name="helperDialect" value="mysql"/>
+            <!-- 分页合理化 -->
+            <property name="reasonable" value="true"/>
+        </plugin>
+    </plugins>
+    <!--============================== 配置分页拦截器插件 ==============================-->
+
+
+    <!--  sql mapper(sql映射文件)的位置 -->
+    <mappers>
+        <!--
+           name: 是包名, 这个包中的所有mapper.xml一次都能加载
+           package的要求:
+            1.mapper文件名称和dao接口必须完全一样,包括大小写
+            2.mapper文件和dao接口必须在同一目录
+        -->
+        <package name="com.zhiyou.mapper"/>
+    </mappers>
+</configuration>

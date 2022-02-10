@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiyou.mapper.DrugMapper">
+
+    <!--全部-->
+    <select id="findAll" resultType="Drug">
+        select * from drug
+        <where>
+            <if test="drugName != null and drugName.trim() != '' ">
+                drug_name like '%' #{drugName} '%'
+            </if>
+            <if test="drugType != null and drugType.trim() != '' ">
+                or drug_type like '%' #{drugType} '%'
+            </if>
+        </where>
+    </select>
+
+    <!--添加-->
+    <insert id="addDrug">
+        INSERT INTO drug (
+        drug_num,
+        drug_url,
+        purchas_price,
+        sale_price,
+        drug_name,
+        drug_type,
+        simple_detail,
+        prodeced_date,
+        expiration_date,
+        quality_date,
+        detail,
+        manufacture,
+        use_infor,
+        total_stock,
+        surplus,
+        noted
+        )
+        VALUES
+        (
+        #{drugNum},
+        #{drugUrl},
+        #{purchasPrice},
+        #{salePrice},
+        #{drugName},
+        #{drugType},
+        #{simpleDetail},
+        #{prodecedDate},
+        #{expirationDate},
+        #{qualityDate},
+        #{detail},
+        #{manufacture},
+        #{useInfor},
+        #{totalStock},
+        #{surplus},
+        #{noted}
+        )
+    </insert>
+
+    <!--详情-->
+    <select id="findDrugById" parameterType="String" resultType="Drug">
+        select
+        *
+        from drug
+        where drug_num = #{drugNum}
+    </select>
+
+    <!--更新前查询-->
+    <select id="selectDrugById" resultType="Drug">
+        select * from drug where drug_num = #{drugNum}
+    </select>
+
+    <!--更新-->
+    <update id="updateDrug">
+        update drug
+        SET drug_num=#{drugNum},
+        drug_url=#{drugUrl},
+        purchas_price=#{purchasPrice},
+        sale_price=#{salePrice},
+        drug_name=#{drugName},
+        drug_type=#{drugType},
+        simple_detail=#{simpleDetail},
+        prodeced_date=#{prodecedDate},
+        expiration_date=#{expirationDate},
+        quality_date=#{qualityDate},
+        detail=#{detail},
+        manufacture=#{manufacture},
+        use_infor=#{useInfor},
+        total_stock=#{totalStock},
+        surplus=#{surplus},
+        noted=#{noted}
+        where
+        drug_num = #{drugNum}
+    </update>
+</mapper>
+        <!--
+            private String drugNum;
+            private String drugUrl;
+            private Double purchasPrice;
+            private Double salePrice;
+            private String drugName;
+            private Integer drugType;
+            private String simpleDetail;
+            private Date prodecedDate;
+            private Date expirationDate;
+            private String qualityDate;
+            private String detail;
+            private String manufacture;
+            private String useInfor;
+            private Integer totalStock;
+            private Integer surplus;
+            private String noted;
+        -->

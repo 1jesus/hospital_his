@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!--spring配置文件: 声明service ,dao , 工具类等对象-->
+    <!--声明数据库属性配置文件的位置-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!--声明数据源, 连接数据库-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.userName}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <!--SqlSessionFactoryBean创建SqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+    </bean>
+
+
+    <!--声明mybatis的扫描器, 创建mapper对象-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.zhiyou.mapper"/>
+        <!--dao包中的所有接口都会创建出dao的对象-->
+    </bean>
+
+    <!--声明service的注解@Service所在包名位置-->
+    <context:component-scan base-package="com.zhiyou">
+        <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
+    </context:component-scan>
+
+
+    <!-- 整合Shiro -->
+    <!--    <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher" >-->
+    <!--        <property name="hashAlgorithmName" value="md5"/>-->
+    <!--        <property name="hashIterations" value="1024"/>-->
+    <!--    </bean>-->
+
+    <!-- 1) 指定自定义域(认证授权) -->
+    <bean id="userRealm" class="com.zhiyou.realm.UserRealm">
+        <!--        <property name="credentialsMatcher" ref="credentialsMatcher"/>-->
+    </bean>
+
+    <!-- 2) 创建shiro安全管理器-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- 2.1) 安全管理器注入域 -->
+        <property name="realm" ref="userRealm"/>
+    </bean>
+
+    <!-- 4) 自定义角色拦截器 -->
+    <bean id="rolesOrAuthorizationFilter" class="com.zhiyou.filter.RolesOrAuthorizationFilter"/>
+
+    <!-- 3) 写web拦截设置
+            id一定与web.xml拦截器的name一致
+    -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 5) 设置自定义拦截器 -->
+        <property name="filters">
+            <map>
+                <!-- key就是拦截器名 -->
+                <entry key="rolesOr" value-ref="rolesOrAuthorizationFilter"/>
+            </map>
+        </property>
+        <!-- 没有权限时,跳转页面 -->
+        <property name="unauthorizedUrl" value="/401.jsp"/>
+        <!-- 没有登录时,跳转登录 -->
+        <property name="loginUrl" value="/login.jsp"/>
+        <property name="filterChainDefinitions">
+            <value> <!-- 按照ini文件中[urls]处的写法写 -->
+                /static/** = anon
+                /view/** = authc
+                /user/login.do=anon
+                <!--
+                    资源的权限可以设置成根据对应权限才可以访问
+                    也可以设置成根据对应角色才能访问
+                -->
+                <!--/registration/*.do=authc,perms["/registration"]-->
+                <!--/view/registration/**=authc,perms["/registration"]-->
+                <!--/medicine/*.do=authc,perms["/drug"]-->
+                <!--/view/medicine/**=authc,perms["/drug"]-->
+                <!--/view/hospital/**=authc,perms["/hospitalization"]-->
+                <!--
+                    roles参数可以写多个，多个时必须加上引号，并且参数之间用逗号分割，
+                    当有多个参数时，每个参数通过才算通过，相当于hasAllRoles()方法。
+                    shiro的角色过滤是and的关系。
+                    Shiro自己的角色拦截器时验证所有角色同时拥有才会返回true
+                -->
+                <!--                /registration/*.do=authc,roles["超级管理员","院长"]-->
+                /registration/*.do=authc,rolesOr["超级管理员","院长"]
+                /drug/*.do=authc,roles[超级管理员]
+                /doctor/*.do=authc,rolesOr["超级管理员","院长"]
+                /hospital/*.do=authc,roles[超级管理员]
+
+                /index.jsp = authc
+                /login.jsp = anon
+                /user/logout.do=logout
+            </value>
+        </property>
+    </bean>
+
+    <!--事务配置: 注解的配置,  aspectj配置-->
+    <!--两个配置二选一, 一般事务是后期加上, 即调试完后-->
+</beans>

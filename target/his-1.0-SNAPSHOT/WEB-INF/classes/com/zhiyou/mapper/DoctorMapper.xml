@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiyou.mapper.DoctorMapper">
+    <!--全部-->
+    <select id="findAll" resultType="com.zhiyou.model.DoctorVo">
+        SELECT
+        d.*, c. NAME certificate_name,
+        s.secco_name section_name,
+        e. NAME education_name
+        FROM
+        certificate_type c,
+        education e,
+        section s,
+        doctor d
+        WHERE
+        d.certificate_type = c.id
+        AND d.section_id = s.id
+        AND d.education = e.id
+        <if test="id != null and id.trim() != '' ">
+            and d.id like '%' #{id} '%'
+        </if>
+        <if test="name != null and name.trim() != '' ">
+            and d.name like '%' #{name} '%'
+        </if>
+        <if test="sectionId != null and sectionId.trim() != '' ">
+            and d.section_id like '%' #{sectionId} '%'
+        </if>
+    </select>
+
+    <!--添加-->
+    <insert id="addDoctor">
+        INSERT INTO doctor (
+        name,
+        certificate_type,
+        id_num,
+        phone,
+        special_plane,
+        sex,
+        age,
+        birthday,
+        email,
+        section_id,
+        education,
+        noted
+        )
+        VALUES
+        (
+        #{name},
+        #{certificateType},
+        #{idNum},
+        #{phone},
+        #{specialPlane},
+        #{sex},
+        #{age},
+        #{birthday},
+        #{email},
+        #{sectionId},
+        #{education},
+        #{noted}
+        )
+    </insert>
+
+    <!--详情-->
+    <select id="findDoctorById" resultType="DoctorVo">
+        select * from doctor where id = #{id}
+    </select>
+
+    <!--更新1-->
+    <select id="selectDoctorById" resultType="DoctorVo">
+        select * from doctor where id = #{id}
+    </select>
+
+    <select id="updateDoctor" resultType="DoctorVo">
+        update doctor
+        SET
+        name=#{name},
+        certificate_type=#{certificateType},
+        id_num=#{idNum},
+        phone=#{phone},
+        special_plane=#{specialPlane},
+        sex=#{sex},
+        age=#{age},
+        birthday=#{birthday},
+        email=#{email},
+        section_id=#{sectionId},
+        education=#{education},
+        noted=#{noted}
+        where
+        id = #{id}
+    </select>
+
+    <!--根据科室查询医生-->
+    <select id="findDoctorBySectionId" resultType="DoctorVo">
+        select * from doctor where section_id = #{sectionId}
+    </select>
+
+    <!--查询所有医生的id和name-->
+    <select id="allDoctor" resultType="DoctorVo">
+        select d.id , d.name ,s.secco_name 'section_name' from doctor d, section s where d.id = s.id
+    </select>
+</mapper>

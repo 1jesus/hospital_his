@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiyou.mapper.RegistrationInforMapper">
+    <!--
+        多表联查: 挂号信息(患者信息+医生信息+科室信息)
+        使用的是扩展类封装
+    -->
+    <select id="findAll" parameterType="Map" resultType="RegistrationInforVo">
+        SELECT
+        r.*,
+        d.name doctor_name,
+        s.secco_name section_name
+        FROM
+        registration_infor r,
+        doctor d,
+        section s
+        WHERE
+        r.doctor_id = d.id
+        AND r.section_id = s.id
+        <!-- 患者id不为空,根据患者id模糊查询 -->
+        <if test="medicalRecord != null and medicalRecord != '' ">
+            AND r.medical_record like concat('%',#{medicalRecord},'%')
+        </if>
+        <!-- 医生名字不为空,根据医生名字模糊查询 -->
+        <if test="doctorName != null and doctorName != '' ">
+            AND d.name like concat('%',#{doctorName},'%')
+        </if>
+        <!-- 科室名字不为空,根据科室名字模糊查询 -->
+        <if test="sectionName != null and sectionName != '' ">
+            AND s.secco_name like concat('%',#{sectionName},'%')
+        </if>
+        <choose>
+            <!-- 结束时间和开始时间都不为空,就按照填充的时间查询 -->
+            <when test="endTime != null and endTime != '' ">
+                <if test="startTime != null and startTime != '' ">
+                    AND r.time &gt; #{startTime} AND r.time &lt; #{endTime}
+                </if>
+            </when>
+            <!-- 结束时间为空,就按照当前时间为结束时间 -->
+            <when test="endTime == null and endTime != '' ">
+                <if test="startTime != null and startTime != '' ">
+                    AND r.time &gt; #{startTime} AND r.time &lt; now()
+                </if>
+            </when>
+            <!-- 开始时间为空,不根据时间查询 -->
+        </choose>
+    </select>
+
+    <!--添加-->
+    <insert id="addOne" parameterType="RegistrationInfor">
+        INSERT INTO registration_infor (
+        `name`,
+        certificate_type,
+        id_num,
+        social_safe_num,
+        phone,
+        self_paying,
+        sex,
+        career,
+        early_appointment,
+        doctor_id,
+        `status`,
+        noted,
+        time,
+        section_id,
+        age,
+        registration_fee
+        )
+        VALUES
+        (#{name},#{certificateType},#{idNum},#{socialSafeNum},#{phone},#{selfPaying},#{sex},#{career},#{earlyAppointment},#{doctorId},#{status},#{noted},#{time},#{sectionId},#{age},#{registrationFee})
+    </insert>
+
+    <!--查询-->
+    <select id="detailRegistrationInfor" resultType="RegistrationInfor">
+        select * from registration_infor where medical_record = #{medicalRecord}
+    </select>
+
+    <!--删除-->
+    <delete id="deletelReg">
+        delete from registration_infor where medical_record = #{medicalRecord}
+    </delete>
+
+    <!--更新前查询-->
+    <select id="findRegById" resultType="RegistrationInfor">
+        select * from registration_infor where medical_record = #{medicalRecord}
+    </select>
+    <!--更新-->
+    <update id="updateReg">
+        update registration_infor
+        SET name=#{name},
+        certificate_type=#{certificateType},
+        id_num=#{idNum},
+        registration_fee=#{registrationFee},
+        social_safe_num=#{socialSafeNum},
+        phone=#{phone},
+        self_paying=#{selfPaying},
+        sex=#{sex},
+        age=#{age},
+        career=#{career},
+        early_appointment=#{earlyAppointment},
+        section_id=#{sectionId},
+        noted=#{noted}
+        where
+        medical_record = #{medicalRecord}
+    </update>
+
+    <!--批量删除
+        其实不是删除,退号只是更改状态,将状态改为已退号!
+    -->
+    <update id="deleteAll" parameterType="List">
+        <!-- 退号就是更改状态为5 -->
+        update registration_infor set status = 5 where medical_record in
+        <foreach collection="list" item="i" open="(" separator="," close=")">
+            #{i}
+        </foreach>
+    </update>
+
+    <!--使用ajax根据病历号回显数据-->
+    <select id="findRegistrationInfoVoById" parameterType="int" resultType="RegistrationInforVo">
+        SELECT
+        r.*,
+        d.name doctor_name,
+        s.secco_name section_name
+        FROM
+        registration_infor r,
+        doctor d,
+        section s
+        WHERE
+        r.doctor_id = d.id
+        AND r.section_id = s.id
+        AND r.medical_record = #{medicalRecord}
+    </select>
+
+    <!--导出Excel-->
+    <select id="findAllRegistToExcel" resultType="RegistExcel">
+        SELECT
+        re.medical_record medicalRecord,
+        re. NAME `name`,
+        IF (re.sex = 1, '男', '女') 'sex',
+        re.age,
+        re.ID_num idNum,
+        ct. NAME `cardtypename`,
+        re.social_safe_num socialSafeNum,
+        doc. NAME doctorname,
+        sec.secco_name sectionname,
+        re.phone,
+        IF (
+        re.self_paying = 1,
+        '是',
+        '否'
+        ) 'selfPaying',
+        re.career,
+        IF (
+        re.early_appointment = 1,
+        '初诊',
+        '复诊'
+        ) 'earlyAppointment',
+        CASE re. STATUS
+        WHEN 1 THEN
+        '已挂号'
+        WHEN 2 THEN
+        '已询医'
+        WHEN 3 THEN
+        '已住院'
+        WHEN 4 THEN
+        '已出院'
+        WHEN 5 THEN
+        '已结算'
+        ELSE
+        '已退号'
+        END 'status',
+        re.noted,
+        re.time,
+        re.registration_fee registrationFee
+        FROM
+        registration_infor re,
+        doctor doc,
+        section sec,
+        certificate_type ct
+        WHERE
+        re.doctor_id = doc.id
+        AND re.section_id = sec.id
+        AND re.certificate_type = ct.id
+    </select>
+
+
+</mapper>

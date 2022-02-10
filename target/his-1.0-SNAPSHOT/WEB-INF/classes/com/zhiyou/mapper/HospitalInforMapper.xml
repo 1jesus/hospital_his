@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiyou.mapper.HospitalInforMapper">
+    <!--全部
+        (住院表+科室表+医生表+挂号表)
+    -->
+    <select id="findAll" resultType="RegistrationInforVo">
+        SELECT
+        h.*,
+        s.secco_name section_name,
+        d.name doctor_name,
+        r.name,
+        r.time,
+        r.status,
+        r.phone
+        FROM
+        section s,
+        doctor d,
+        hospital_infor h,
+        registration_infor r
+        WHERE
+        r.medical_record = h.medical_record
+        AND r.doctor_id = d.id
+        AND r.section_id = s.id
+        <!-- 患者id不为空,根据患者id模糊查询 -->
+        <if test="medicalRecord != null and medicalRecord != '' ">
+            AND r.medical_record like concat('%',#{medicalRecord},'%')
+        </if>
+        <!-- 医生名字不为空,根据医生名字模糊查询 -->
+        <if test="doctorName != null and doctorName != '' ">
+            AND d.name like concat('%',#{doctorName},'%')
+        </if>
+        <!-- 科室名字不为空,根据科室名字模糊查询 -->
+        <if test="sectionName != null and sectionName != '' ">
+            AND s.secco_name like concat('%',#{sectionName},'%')
+        </if>
+        <choose>
+            <!-- 结束时间和开始时间都不为空,就按照填充的时间查询 -->
+            <when test="endTime != null and endTime != '' ">
+                <if test="startTime != null and startTime != '' ">
+                    AND r.time &gt; #{startTime} AND r.time &lt; #{endTime}
+                </if>
+            </when>
+            <!-- 结束时间为空,就按照当前时间为结束时间 -->
+            <when test="endTime == null and endTime != '' ">
+                <if test="startTime != null and startTime != '' ">
+                    AND r.time &gt; #{startTime} AND r.time &lt; now()
+                </if>
+            </when>
+            <!-- 开始时间为空,不根据时间查询 -->
+        </choose>
+    </select>
+
+    <!--详情-->
+    <select id="findHospitalById" resultType="RegistrationInforVo">
+        SELECT
+        r.*, s.secco_name section_name,
+        d. NAME doctor_name
+        FROM
+        section s,
+        doctor d,
+        certificate_type c,
+        registration_infor r
+        WHERE
+        r.medical_record = c.id
+        AND r.doctor_id = d.id
+        AND r.section_id = s.id
+        and r.medical_record = #{medicalRecord}
+    </select>
+
+    <!--退院-->
+    <update id="updateStatus">
+        update registration_infor set status = 5 where medical_record = #{medicalRecord}
+    </update>
+
+    <!--出院-->
+    <update id="updateStatus2">
+        update registration_infor set status = 4 where medical_record = #{medicalRecord}
+    </update>
+
+    <!--更新前(回显)-->
+    <select id="updateBefore" resultType="RegistrationInforVo">
+        SELECT
+        r.*,
+        s.secco_name section_name,
+        d. NAME doctor_name,
+        h.caregiver,
+        h.bed_id,
+        h.pay_the_deposit,
+        h.state_illness
+        FROM
+        section s,
+        doctor d,
+        certificate_type c,
+        registration_infor r,
+        hospital_infor h
+        WHERE
+        r.medical_record = c.id
+        AND r.doctor_id = d.id
+        AND r.section_id = s.id
+        and r.medical_record = 1
+        and r.medical_record = h.medical_record
+    </select>
+
+    <!--
+    private String doctorName;
+    private String sectionName;
+    private Integer bedId;     //床位号
+    private Double payTheDeposit; //缴费押金
+    private String caregiver; //护理
+    private String stateIllness; //病情
+
+    private String name;
+    private Integer certificateType;
+    private String idNum;
+    private String socialSafeNum;
+    private String phone;
+    private Integer selfPaying;
+    private Integer sex;
+    private String career;
+    private Integer earlyAppointment;
+    private Integer doctorId;
+    privte Integer status;
+    private String noted;
+    private Date time;
+    private Integer sectionId;
+    private Integer age;
+    private Double registrationFee;
+
+    private String caregiver;
+    private Integer bedId;
+    private Double payTheDeposit;
+    private String stateIllness;
+    -->
+
+    <!--更新后(设置数据)-->
+    <update id="updateAfter">
+        UPDATE registration_infor r,hospital_infor h
+        SET
+        r.medical_record = #{medicalRecord},
+        r.name = #{name},
+        r.certificate_type =#{certificateType},
+        r.id_num =#{idNum},
+        r.social_safe_num =#{socialSafeNum},
+        r.phone = #{phone},
+        r.self_paying = #{selfPaying},
+        r.sex=#{sex},
+        r.age=#{age},
+        r.early_appointment =#{earlyAppointment},
+        r.section_id=#{sectionId},
+        r.doctor_id=#{doctorId},
+        r.noted=#{noted},
+        h.caregiver=#{caregiver},
+        h.bed_id=#{bedId},
+        h.pay_the_deposit=#{payTheDeposit},
+        h.state_illness=#{stateIllness}
+        where
+        r.medical_record = #{medicalRecord}
+        and h.medical_record = #{medicalRecord}
+    </update>
+
+    <!--添加(回显数据)-->
+    <insert id="insertRegVo">
+
+    </insert>
+</mapper>

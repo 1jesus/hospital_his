@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiyou.mapper.UserMapper">
+    <!--    <select id="findUserByLogin" resultType="User">-->
+    <!--        SELECT-->
+    <!--	        *-->
+    <!--        FROM-->
+    <!--	        USER-->
+    <!--        WHERE-->
+    <!--	        user_name = #{username}-->
+    <!--        AND PASSWORD = #{password}-->
+    <!--    </select>-->
+
+    <!--登录-->
+    <select id="findUserByLogin" parameterType="Map" resultType="User">
+        SELECT
+        *
+        FROM
+        user
+        WHERE
+        user_name = #{username}
+        AND PASSWORD = #{password}
+    </select>
+
+    <!--根据用户查询-->
+    <select id="findUserByUsername" parameterType="String" resultType="User">
+        SELECT
+        *
+        FROM
+        user
+        WHERE
+        user_name = #{username}
+    </select>
+
+    <!--注册-->
+    <insert id="regist" parameterType="User">
+        insert into user (user_name,PASSWORD,salt)
+        values (#{userName},#{password},#{salt});
+    </insert>
+
+
+    <!--多表联查
+         查全部
+    -->
+    <resultMap id="userRolesMap" type="User">
+        <!-- user对象封装 -->
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="password" property="password"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+        <result column="real_name" property="realName"/>
+        <result column="email" property="email"/>
+        <result column="salt" property="salt"/>
+        <!-- 一对多封装 -->
+        <collection property="roles" ofType="Role" select="com.zhiyou.mapper.RoleMapper.findRolesByUserid" column="id"/>
+    </resultMap>
+    <select id="findAllUser" resultMap="userRolesMap">
+        SELECT
+        *
+        FROM
+        user
+    </select>
+
+    <!--
+        在insert语句中加入两个属性
+            useGeneratedKeys="true"
+            keyProperty="id"；keyProperty中对应相应id的字段名；
+            在Service中就可以获得生成的主键id值
+    -->
+    <insert id="add" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into user (user_name, password,update_time,real_name,email,salt)
+        values
+        (#{userName}, #{password},#{updateTime}, #{realName},#{email}, #{salt})
+    </insert>
+</mapper>

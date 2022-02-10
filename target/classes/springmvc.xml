@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+                           http://www.springframework.org/schema/aop
+                           https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--springmvc配置文件, 声明controller和其它web相关的对象-->
+    <!--开启组件扫描器-->
+    <context:component-scan base-package="com.zhiyou.controller"/>
+
+    <!--配置视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/view/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+
+    <!--添加注解驱动
+        (1) 响应ajax请求, 返回json
+        (2) 解决静态资源的访问问题
+    -->
+    <mvc:annotation-driven/>
+
+    <!--=========================== 使用Aop方法打印日志 ===========================-->
+    <!--aop注解启动-->
+    <aop:aspectj-autoproxy/>
+
+    <!--适配器引射器驱动-->
+    <mvc:annotation-driven/>
+
+    <!--=========================== 文件上传的配置 ===========================-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!--文件大小(10M)-->
+        <property name="maxUploadSize" value="10485760"/>
+
+        <!--编码格式-->
+        <property name="defaultEncoding" value="utf-8"/>
+    </bean>
+
+
+    <!--    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>-->
+    <!--    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"-->
+    <!--          depends-on="lifecycleBeanPostProcessor">-->
+    <!--        <property name="proxyTargetClass" value="true"></property>-->
+    <!--    </bean>-->
+    <!--    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">-->
+    <!--        &lt;!&ndash; 引用的是applicationContext.xml中的bean的id &ndash;&gt;-->
+    <!--        <property name="securityManager" ref="securityManager"/>-->
+    <!--    </bean>-->
+
+
+</beans>
